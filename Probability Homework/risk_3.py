@@ -1,6 +1,13 @@
 import random
 import matplotlib.pyplot as plt
 
+
+#Assume that both the attacker and defender have 10 armies at the beginning of the battle, and assume that the attacker continues the battle
+# until the territory is won or the attacker only has a single army remaining. Your task is to estimate the probability for each possible number
+# of remaining armies of each player at the end of this battle. The possibilities are the attacker could have any number two through ten, and
+# the defender zero, or the attacker could have only one army remaining
+# and the defender could have any number, one through ten. Display these
+# probabilities nicely either in a table or a plot.
 def ten_versus_ten_simualtion():
     a_starter_armies = 10
     d_starter_armies = 10
@@ -29,7 +36,9 @@ def ten_versus_ten_simualtion():
                 else:
                     d_battle_armies -= 1
 
-
+        #Check results and add the result to the proper key
+        #Theres probably a much cleaner way to do this but I can't be bothered rn
+        #Also screw python for not havign switch statements
         if (a_battle_armies > 1 and d_battle_armies == 0):
             if (a_battle_armies == 2):
                 results['A2D0'] = results['A2D0'] + 1
