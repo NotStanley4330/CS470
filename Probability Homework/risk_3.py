@@ -91,20 +91,16 @@ for key in results:
 
 
 # Extract keys and values from the dictionary
-categories = list(results.keys())
-values = list(results.values())
+numdice = list(results.keys())
+percents = list(results.values())
 
 # Create a bar chart
 plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
-plt.bar(categories, values)
-
-# Label the axes and add a title
+plt.bar(numdice, percents)
 plt.xlabel('Final Number of Dice')
 plt.ylabel('Percentage of Time Result Occurs')
 plt.title('Simulated Outcomes for 10v10 RISK Battle')
-
-# Display the chart
-plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
-plt.tight_layout()  # Ensure all labels and titles are visible
+plt.xticks(rotation=45)
+plt.tight_layout() 
 plt.show()
 
