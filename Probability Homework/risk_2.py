@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import random
+import numpy as np
 
 
 #Assume that the defender starts out with 5 armies in the territory. Your
@@ -46,9 +47,15 @@ def simulate_attacker_win_probability(attacker_armies, num_samples=100000):
 attacker_armies_range = range(2, 21)
 win_probabilities = [simulate_attacker_win_probability(n) for n in attacker_armies_range]
 
+# Create the plot
 plt.plot(attacker_armies_range, win_probabilities)
 plt.xlabel("Number of Attacker Armies")
 plt.ylabel("Attacker Win Probability")
 plt.title("Probability of Attacker Winning the Territory")
 plt.grid(True)
+
+# Specify the x-axis tick locations and labels for whole integers
+x_ticks = np.arange(min(attacker_armies_range), max(attacker_armies_range) + 1, 1)
+plt.xticks(x_ticks)
+
 plt.show()
