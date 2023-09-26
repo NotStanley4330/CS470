@@ -1,2 +1,7 @@
 # CS470
-Project for BYU Intro to AI class
+Projects for BYU Intro to AI class
+
+
+
+
+This is where all of these projects will live at
