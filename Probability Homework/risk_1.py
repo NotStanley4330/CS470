@@ -28,7 +28,7 @@ def simulate_battle(na, nd, num_samples=100000):
     total = attacker_wins + defender_wins + tie
     return attacker_wins / total, defender_wins / total, tie / total
 
-# Simulate and print results for all combinations of na and nd
+# Simulate and print results for all combinations
 results = {}
 for na in range(1, 4):
     for nd in range(1, 3):
