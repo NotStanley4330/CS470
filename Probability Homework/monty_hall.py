@@ -9,29 +9,24 @@ def monty_hall_simulation(num_games):
     total_games = 0
 
     for _ in range(num_games):
-        # Randomly place the car behind one of the three doors
+        # Randomly place the car behind a door and then randomly choose one
         doors = ['goat', 'goat', 'car']
         random.shuffle(doors)
-
-        # Randomly pick a door to "guess"
         guess = random.randint(0, 2)
 
-        # Find the door to reveal that has a goat and is not the guessed door
+        # Find a door to show that has a goat and isn't guessed
         reveal = None
-        for i in range(3):
-            if i != guess and doors[i] == 'goat':
-                reveal = i
+        for x in range(3):
+            if x != guess and doors[x] == 'goat':
+                reveal = x
                 break
 
-        # Implement the switching strategy
         switch_guess = 3 - guess - reveal
 
-        # Check if switching wins
+        # Check which strategy is the winner
         if doors[switch_guess] == 'car':
             switch_wins += 1
-
-        # Check if staying wins
-        if doors[guess] == 'car':
+        elif doors[guess] == 'car':
             stay_wins += 1
 
         total_games += 1
@@ -40,7 +35,7 @@ def monty_hall_simulation(num_games):
 
     return switch_win_percentages, stay_win_percentages
 
-# Simulate at least 1000 games
+# Simulate at least 10k games
 num_games = 10000
 switch_win_percentages, stay_win_percentages = monty_hall_simulation(num_games)
 
