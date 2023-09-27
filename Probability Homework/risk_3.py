@@ -15,7 +15,7 @@ def ten_versus_ten_simualtion():
     results = {'A10D0': 0, 'A9D0': 0, 'A8D0': 0, 'A7D0': 0, 'A6D0': 0, 'A5D0': 0, 'A4D0': 0, "A3D0": 0, "A2D0": 0,
                'A1D1': 0, 'A1D2': 0, 'A1D3': 0, 'A1D4': 0, 'A1D5': 0, 'A1D6': 0, 'A1D7': 0, 'A1D8': 0, 'A1D9': 0, 'A1D10': 0 }
 
-    num_simualtions = 10000
+    num_simualtions = 100000
 
     for x in range(num_simualtions):
         a_battle_armies = a_starter_armies
@@ -87,7 +87,7 @@ results =  ten_versus_ten_simualtion()
 
 #convert all values in the dictonary to percentages
 for key in results:
-   results[key] = ((results[key]/10000.0) * 100) 
+   results[key] = ((results[key]/100000.0) * 100) 
 
 
 # Extract keys and values from the dictionary

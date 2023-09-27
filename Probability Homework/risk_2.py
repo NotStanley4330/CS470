@@ -2,21 +2,6 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 
-
-#Assume that the defender starts out with 5 armies in the territory. Your
-# task is to estimate, for all numbers of attacker armies between 2 and 20,
-# the probability that the attacker will win the territory. The attacker wins
-# the territory if all of the defender armies are lost. As the battle progresses,
-# the dice rolling will continue, with each player using the maximum number
-# of dice allowed given their number of armies, until either the defender has
-# lost all of their armies or the attacker only has 1 army remaining. Again,
-# the attacker wins the territory if the defender armies are entirely lost.
-# Plot out your results showing this attacker-win-probability (y-axis) for
-# each different number of attacker armies (x-axis). Make sure your plot
-# is labeled appropriately. What is the minimum number of armies the
-# attacker needs to guarantee a 50% chance of winning the territory? How
-# about to guarantee an 80% chance of winning?
-
 def simulate_attacker_win_probability(attacker_armies, num_samples=100000):
     win_count = 0
     
