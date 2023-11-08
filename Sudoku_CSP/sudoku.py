@@ -303,7 +303,7 @@ def count_constraints(puzzle, row, column):
 
     
     #MODIFY THIS
-    return constraints
+    return len(constraints)
 
 def get_unassigned_variables(puzzle):
     '''
