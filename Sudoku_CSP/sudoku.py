@@ -191,7 +191,7 @@ class Sudoku():
                 #grid checking
                 if x != cell:
                     curr_row, curr_column = self.get_row_column(grid, x)
-                    success = self.cells[curr_row][curr_column].remove_value[value]
+                    success = self.cells[curr_row][curr_column].remove_value(value)
                 if success == False:
                     return False
 
@@ -204,20 +204,20 @@ class Sudoku():
             for x in range(0,9):
                 #column Checking
                 if x != column:
-                    if self.cells[row][x].value == value:
+                    if value in self.cells[row][x].domain:
                         total_to_remove += 1
 
                 #row checking
                 if x != row:
-                    if self.cells[x][column].value == value:
+                    if value in self.cells[x][column].domain:
                         total_to_remove += 1
 
                 #grid checking
                 if x != cell:
                     curr_row, curr_column = self.get_row_column(grid, x)
-                    if self.cells[curr_row][curr_column].value == value:
+                    if value in self.cells[curr_row][curr_column].domain:
                         total_to_remove += 1
-            
+
             return total_to_remove
 
     def get_row_column(self, grid, cell):
