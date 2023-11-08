@@ -215,8 +215,9 @@ class Sudoku():
                 #grid checking
                 if x != cell:
                     curr_row, curr_column = self.get_row_column(grid, x)
-                    if value in self.cells[curr_row][curr_column].domain:
-                        total_to_remove += 1
+                    if curr_row != row and curr_column != column: #we need to vefify that we aren't double counting 
+                        if value in self.cells[curr_row][curr_column].domain:
+                            total_to_remove += 1
 
             return total_to_remove
 
@@ -283,11 +284,26 @@ def count_constraints(puzzle, row, column):
     This is called by the max_degree function
     '''
 
+    #TODO: VERIFY ALL THIS
     # TASK 3 CODE HERE
+    unassigned_variables = get_unassigned_variables(puzzle)
+    constraints = []
+    grid, cell = puzzle.get_grid_cell(row, column)
+
+    for tuple in unassigned_variables:
+        if tuple[0] == row and tuple[1] != column:
+            constraints.append(tuple)
+        elif tuple[1] == column and tuple[0] != row:
+            constraints.append(tuple)
+        else:
+            curr_grid, curr_cell = puzzle.get_grid_cell(tuple[0], tuple[1])
+            if curr_grid == grid and curr_cell != cell:
+                constraints.append(tuple)
+            
 
     
     #MODIFY THIS
-    # return 0
+    return constraints
 
 def get_unassigned_variables(puzzle):
     '''
