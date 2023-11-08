@@ -169,12 +169,56 @@ class Sudoku():
         '''
 
         # TASK 2 Code here
-
-        #Modify these return values!!
+        grid, cell = self.get_grid_cell(row, column)
         if mode == 'remove':
+            #print(f"grid and cell of {row}, {column} is {grid}, {cell}")
+            for x in range(0,9):
+                #row checking
+                success = True
+                if x != column:
+                    success = self.cells[row][x].remove_value(value)
+                    #print(f"Domain of {row}, {x} is now {self.cells[row][x].domain}")
+                if success == False:
+                    return False
+                
+                #column checking
+                if x != row:
+                    success = self.cells[x][column].remove_value(value)
+                    #print(f"Domain of {x}, {column} is now {self.cells[x][column].domain}")
+                if success == False:
+                    return False
+                
+                #grid checking
+                if x != cell:
+                    curr_row, curr_column = self.get_row_column(grid, x)
+                    success = self.cells[curr_row][curr_column].remove_value[value]
+                if success == False:
+                    return False
+
+                
+            
+
             return True
         elif mode == 'count': 
-            return 0
+            total_to_remove = 0
+            for x in range(0,9):
+                #column Checking
+                if x != column:
+                    if self.cells[row][x].value == value:
+                        total_to_remove += 1
+
+                #row checking
+                if x != row:
+                    if self.cells[x][column].value == value:
+                        total_to_remove += 1
+
+                #grid checking
+                if x != cell:
+                    curr_row, curr_column = self.get_row_column(grid, x)
+                    if self.cells[curr_row][curr_column].value == value:
+                        total_to_remove += 1
+            
+            return total_to_remove
 
     def get_row_column(self, grid, cell):
         '''
@@ -240,6 +284,7 @@ def count_constraints(puzzle, row, column):
     '''
 
     # TASK 3 CODE HERE
+
     
     #MODIFY THIS
     # return 0
