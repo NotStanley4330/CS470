@@ -400,6 +400,9 @@ def backtracking_search(puzzle):
     #    to see if the puzzle is solved.
     if (puzzle.is_solved()):
         return puzzle
+    
+
+    
 
     # 2. Select a variable to assign next ( use select_variable() function, which returns 
     #    row and column of the variable 
