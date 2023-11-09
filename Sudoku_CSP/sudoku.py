@@ -254,7 +254,17 @@ def mrv(puzzle, unassigned):
     [unassigned] is a list of (row, column) tuples corresponding to cell locations
     '''
 
-    # Change this.  Return your list of minimum remaining value locations
+    curr_min = 9
+    unassigned = []
+    for tuple in get_unassigned_variables(puzzle):
+        if len(puzzle.cells[tuple[0]][tuple[1]].domain) == curr_min:
+            unassigned.append(tuple)
+        elif len(puzzle.cells[tuple[0]][tuple[1]].domain) < curr_min:
+            unassigned.clear()
+            curr_min = len(puzzle.cells[tuple[0]][tuple[1]].domain)
+            unassigned.append(tuple)
+
+    # need to verify this all works as well
     return unassigned
 
 def max_degree(puzzle, tied):
@@ -355,7 +365,19 @@ def order_values(puzzle, row, column):
     #Get the current domain for this variable
     domain = puzzle.cells[row][column].domain[:]
 
+    sorting_tuples = []
     # TASK 5 CODE HERE
+    for value in domain:
+        num_constraints = puzzle.forward_check(row, column, value, 'count') #we can use the forward checking count mode to get how many constraints we have
+        sorting_tuples.append((num_constraints, value))
+
+    doamin_sorted = []
+    #the maximum number of constraints is 20, so lets just start at 0 and work from there
+    for x in range(21):
+        for tuple in sorting_tuples:
+            if tuple[0] == x:
+                #essentially ties should be broken by whatever appears first beign less constraining
+                doamin_sorted.append(tuple[1])
     
     #Change this to return an ordered list
     return domain
@@ -376,6 +398,8 @@ def backtracking_search(puzzle):
 
     # 1. Base case, is input [puzzle] solved? If so, return the puzzle. Use is_solved() function
     #    to see if the puzzle is solved.
+    if (puzzle.is_solved()):
+        return puzzle
 
     # 2. Select a variable to assign next ( use select_variable() function, which returns 
     #    row and column of the variable 
