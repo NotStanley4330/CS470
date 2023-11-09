@@ -401,11 +401,9 @@ def backtracking_search(puzzle):
     if (puzzle.is_solved()):
         return puzzle
     
-
-    
-
     # 2. Select a variable to assign next ( use select_variable() function, which returns 
     #    row and column of the variable 
+    select_variable(puzzle)
 
     # 3. Select an ordering over the values (use order_values(r,c) where r, c are the row
     #    and column of the selected variable.  It returns a list of values
