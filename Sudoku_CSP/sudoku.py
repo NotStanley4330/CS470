@@ -371,16 +371,16 @@ def order_values(puzzle, row, column):
         num_constraints = puzzle.forward_check(row, column, value, 'count') #we can use the forward checking count mode to get how many constraints we have
         sorting_tuples.append((num_constraints, value))
 
-    doamin_sorted = []
+    domain_sorted = []
     #the maximum number of constraints is 20, so lets just start at 0 and work from there
     for x in range(21):
         for tuple in sorting_tuples:
             if tuple[0] == x:
                 #essentially ties should be broken by whatever appears first beign less constraining
-                doamin_sorted.append(tuple[1])
+                domain_sorted.append(tuple[1])
     
     #Change this to return an ordered list
-    return domain
+    return domain_sorted
 
 def backtracking_search(puzzle):
     '''
@@ -403,36 +403,49 @@ def backtracking_search(puzzle):
     
     # 2. Select a variable to assign next ( use select_variable() function, which returns 
     #    row and column of the variable 
-    select_variable(puzzle)
+    row, column = select_variable(puzzle)
 
     # 3. Select an ordering over the values (use order_values(r,c) where r, c are the row
     #    and column of the selected variable.  It returns a list of values
+    ordered_values = order_values(puzzle, row, column)
 
+    succesful_search = False
     # 4. For each value in the ordered list:
+    for value in ordered_values:
 
         # 4.1 Get a copy of the puzzle to modify
         #     4.1.a Create new puzzle
-        
+        puzzle_new = Sudoku()   
         #     4.1.b Set it to be equal to the current puzzle (use copy_puzzle())
+        puzzle_new.copy_puzzle(puzzle)
 
         # 4.2 Assign current value to selected variable (use assign_value())
+        puzzle_new.cells[row][column].assign_value(value)
 
         # 4.3 Forward check from this assignment (use forward_check(), in 'remove' mode)
         #     which will return False if this assignment is invalid (empty domain was found)
         #     or True if it is valid. 
+        valid_assignment = puzzle_new.forward_check(row, column, value)
 
         # 4.4 If forward checking detects a problem, then continue to the next value
+        if valid_assignment == False:
+            continue
+        
+        solved_puzzle = backtracking_search(puzzle_new)
 
         # 4.5 If forward checking doesn't detect problem, then recurse on the 
         #     modified puzzle (call backtracking_search())
 
         # 4.6 If the search succeeds (return value of backtracking is not None)
         #     return solved puzzle! (this is what backtracking_search should return)
+        if solved_puzzle != None:
+            return solved_puzzle
+        else:
+            continue
 
         # 4.7 If search is a failure, continue with next value for this variable
 
-    # 5. If all values for the chosen variable failed, return failure (None)
-    # return None
+    return None
     
 if __name__ == "__main__":
 
