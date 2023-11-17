@@ -17,7 +17,7 @@ class AIPlayer:
 
         #Parameters for the different agents
         
-        self.depth_limit = 3 #default depth-limit - change if you desire
+        self.depth_limit = 5 #default depth-limit - change if you desire
         #Alpha-beta
         # Example of using command line param to overwrite depth limit
         if self.type == 'ab' and param:
