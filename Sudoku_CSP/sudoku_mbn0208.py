@@ -293,8 +293,6 @@ def count_constraints(puzzle, row, column):
     return this number
     This is called by the max_degree function
     '''
-
-    #TODO: VERIFY ALL THIS
     # TASK 3 CODE HERE
     unassigned_variables = get_unassigned_variables(puzzle)
     constraints = []
@@ -311,8 +309,6 @@ def count_constraints(puzzle, row, column):
                 constraints.append(tuple)
             
 
-    
-    #MODIFY THIS
     return len(constraints)
 
 def get_unassigned_variables(puzzle):
@@ -366,7 +362,6 @@ def order_values(puzzle, row, column):
     domain = puzzle.cells[row][column].domain[:]
 
     sorting_tuples = []
-    # TASK 5 CODE HERE
     for value in domain:
         num_constraints = puzzle.forward_check(row, column, value, 'count') #we can use the forward checking count mode to get how many constraints we have
         sorting_tuples.append((num_constraints, value))
