@@ -4,6 +4,8 @@
 
 import numpy as np
 
+WINNING_NUMBER = 100
+LOSING_NUMBER = -100
 
 class AIPlayer:
     def __init__(self, player_number, name, ptype, param):
@@ -33,31 +35,51 @@ class AIPlayer:
             self.max_iterations = int(param)
 
     def get_alpha_beta_move(self, board):
-        """
-        Given the current state of the board, return the next move based on
-        the alpha-beta pruning algorithm
-
-        This will play against either itself or a human player
-
-        INPUTS:
-        board - a numpy array containing the state of the board using the
-                following encoding:
-                - the board maintains its same two dimensions
-                    - row 0 is the top of the board and so is
-                      the last row filled
-                - spaces that are unoccupied are marked as 0
-                - spaces that are occupied by player 1 have a 1 in them
-                - spaces that are occupied by player 2 have a 2 in them
-
-        RETURNS:
-        The 0 based index of the column that represents the next move
-        """
         moves = get_valid_moves(board)
         best_move = np.random.choice(moves)
+        alpha = -np.inf
+        beta = np.inf
 
-        #YOUR ALPHA-BETA CODE GOES HERE
+        for move in moves:
+            # Make a move on a copy of the board
+            new_board = np.copy(board)
+            make_move(new_board, move, self.player_number)
+
+            # Perform alpha-beta search
+            value = self.alpha_beta_search(new_board, self.depth_limit, alpha, beta, False)
+
+            if value > alpha:
+                alpha = value
+                best_move = move
 
         return best_move
+
+    def alpha_beta_search(self, board, depth, alpha, beta, maximizing_player):
+        if depth == 0 or is_winning_state(board, self.player_number) or is_winning_state(board, self.other_player_number):
+            return self.evaluation_function(board)
+
+        moves = get_valid_moves(board)
+
+        if maximizing_player:
+            value = -np.inf
+            for move in moves:
+                new_board = np.copy(board)
+                make_move(new_board, move, self.player_number)
+                value = max(value, self.alpha_beta_search(new_board, depth - 1, alpha, beta, False))
+                alpha = max(alpha, value)
+                if beta <= alpha:
+                    break  # Beta cutoff
+            return value
+        else:
+            value = np.inf
+            for move in moves:
+                new_board = np.copy(board)
+                make_move(new_board, move, self.other_player_number)
+                value = min(value, self.alpha_beta_search(new_board, depth - 1, alpha, beta, True))
+                beta = min(beta, value)
+                if beta <= alpha:
+                    break  # Alpha cutoff
+            return value
 
 
     def get_mcts_move(self, board):
@@ -115,6 +137,8 @@ class AIPlayer:
 
 
     def evaluation_function(self, board):
+
+
         """
         Given the current stat of the board, return the scalar value that 
         represents the evaluation function for the current player
@@ -134,8 +158,18 @@ class AIPlayer:
         """
 
         #YOUR EVALUATION FUNCTION GOES HERE
+        
+        if is_winning_state(board, self.player_number):
+            return WINNING_NUMBER
+        elif is_winning_state(board, self.other_player_number):
+            return LOSING_NUMBER
+        
+        player_count = count_pieces_in_a_row(board, self.player_number)
+        opponnent_count = count_pieces_in_a_row(board, self.other_player_number)
 
-        return 0
+        score = (player_count - opponnent_count) * 25
+
+        return score
 
 
 class RandomPlayer:
@@ -317,7 +351,7 @@ class MCTSNode:
         #parent with the result
 
         # YOUR MCTS TASK 2 CODE GOES HERE
-
+        print("BLAH")
         # Pseudocode in comments:
         #################################
         # If this state is terminal (meaning the game is over) AND it is a winning state for self.other_player_number
@@ -359,6 +393,39 @@ class MCTSNode:
 
 #This function will modify the board according to 
 #player_number moving into move column
+def count_pieces_in_a_row(board, player_num):
+    #print(f"CHECKING NUMBER OF PIECES IN BOARD FOR PLAYER : {player_num}")
+    count = 0
+
+    # Check horizontally
+    for row in range(board.shape[0]):
+        for col in range(board.shape[1] - 3):
+            if all(board[row, col + i] == player_num for i in range(4)):
+                count += 1
+
+    # Check vertically
+    for col in range(board.shape[1]):
+        for row in range(board.shape[0] - 3):
+            if all(board[row + i, col] == player_num for i in range(4)):
+                count += 1
+
+    # Check diagonally (positive slope)
+    for row in range(board.shape[0] - 3):
+        for col in range(board.shape[1] - 3):
+            if all(board[row + i, col + i] == player_num for i in range(4)):
+                count += 1
+
+    # Check diagonally (negative slope)
+    for row in range(3, board.shape[0]):
+        for col in range(board.shape[1] - 3):
+            if all(board[row - i, col + i] == player_num for i in range(4)):
+                count += 1
+
+    #print(board)
+    #print(f"Number of pieces in a row is: {count}")
+    return count
+
+
 def make_move(board,move,player_number):
     row = 0
     while row < 6 and board[row,move] == 0:
@@ -391,14 +458,14 @@ def is_winning_state(board, player_num):
         for op in [None, np.fliplr]:
             op_board = op(b) if op else b
             
-            root_diag = np.diagonal(op_board, offset=0).astype(np.int)
+            root_diag = np.diagonal(op_board, offset=0).astype(int)
             if player_win_str in to_str(root_diag):
                 return True
 
             for i in range(1, b.shape[1]-3):
                 for offset in [i, -i]:
                     diag = np.diagonal(op_board, offset=offset)
-                    diag = to_str(diag.astype(np.int))
+                    diag = to_str(diag.astype(int))
                     if player_win_str in diag:
                         return True
 
