@@ -17,7 +17,7 @@ class AIPlayer:
 
         #Parameters for the different agents
         
-        self.depth_limit = 5 #default depth-limit - change if you desire
+        self.depth_limit = 2 #default depth-limit - change if you desire
         #Alpha-beta
         # Example of using command line param to overwrite depth limit
         if self.type == 'ab' and param:
@@ -108,32 +108,42 @@ class AIPlayer:
         return root.max_child()
 
     def get_expectimax_move(self, board):
-        """
-        Given the current state of the board, return the next move based on
-        the expectimax algorithm.
-
-        This will play against the random player, who chooses any valid move
-        with equal probability
-
-        INPUTS:
-        board - a numpy array containing the state of the board using the
-                following encoding:
-                - the board maintains its same two dimensions
-                    - row 0 is the top of the board and so is
-                      the last row filled
-                - spaces that are unoccupied are marked as 0
-                - spaces that are occupied by player 1 have a 1 in them
-                - spaces that are occupied by player 2 have a 2 in them
-
-        RETURNS:
-        The 0 based index of the column that represents the next move
-        """
+        
         moves = get_valid_moves(board)
         best_move = np.random.choice(moves)
-        
-        #YOUR EXPECTIMAX CODE GOES HERE
+
+        # YOUR EXPECTIMAX CODE GOES HERE
+        value, best_move = self.expectimax_search(board, self.depth_limit, True, best_move)
 
         return best_move
+
+    def expectimax_search(self, board, depth, maximizing_player, best_move):
+        # Base case: If depth is 0 or the game is over, return the evaluation function value
+        if depth == 0 or is_winning_state(board, self.player_number) or is_winning_state(board, self.other_player_number):
+            return self.evaluation_function(board), None
+
+        moves = get_valid_moves(board)
+
+        if maximizing_player:
+            value = -np.inf
+            for move in moves:
+                new_board = np.copy(board)
+                make_move(new_board, move, self.player_number)
+                child_value, _ = self.expectimax_search(new_board, depth - 1, False, best_move)
+                if child_value > value:
+                    value = child_value
+                    best_move = move
+            return value, best_move
+        else:
+            # Implement the chance node for the random opponent
+            value = 0
+            for move in moves:
+                new_board = np.copy(board)
+                make_move(new_board, move, self.other_player_number)
+                child_value, _ = self.expectimax_search(new_board, depth - 1, True, best_move)
+                value += child_value / len(moves)  # Equal probability for random opponent
+            return value, None
+
 
 
     def evaluation_function(self, board):
