@@ -215,7 +215,7 @@ class mySmartMap extends JComponent implements KeyListener {
     }
     public void keyTyped(KeyEvent e) {
         char key = e.getKeyChar();
-        //System.out.println(key);
+        System.out.println(key);
         
         switch (key) {
             case 'i':
@@ -331,7 +331,7 @@ public class theRobot extends JFrame {
                 knownPosition = true;
                 startX = Integer.parseInt(sin.readLine());
                 startY = Integer.parseInt(sin.readLine());
-                System.out.println("Robot's initial position is known: " + startX + ", " + startY);
+                System.out.println("Robot's initial penis is known: " + startX + ", " + startY);
             }
             else {
                 System.out.println("Robot's initial position is unknown");
@@ -402,282 +402,273 @@ public class theRobot extends JFrame {
         myMaps.updateProbs(probs);
     }
     
+    int getNewX(int direction, int x){
+        int newX = x;
+        switch(direction) {
+            case EAST:
+                newX += 1;
+                break;
+            case WEST:
+                newX -= 1;
+                break;
+        }
+        return newX;
+    }
+
+    int getNewY(int direction, int y){
+        int newY = y;
+        switch(direction) {
+            case NORTH:
+                newY -= 1;
+                break;
+            case SOUTH:
+                newY += 1;
+                break;
+        }
+        return newY;
+    }
+
+    boolean squareValid(int x, int y){
+        boolean valid = true;
+        if((y < 0) || (y >= mundo.height) || (x < 0) || (x >= mundo.width)){
+            valid = false;
+        }
+        return valid;
+    }
+
+    void motionUpdate(int action) {
+        double[][] newProbs = new double[mundo.width][mundo.height];
+        // actions are NORTH, SOUTH, EAST, WEST, STAY
+    
+        double intendedActionProb = moveProb;   
+        double unintendedActionProb = (1.0 - moveProb) / 4.0;
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] != 0){
+                    continue; //Only process empty map squares
+                }
+
+                //Disperse the probability from this square
+                double thisProb = probs[x][y];
+                double stayProb = unintendedActionProb;
+                //Process all but stay in this loop
+                //Stay will be handled afterwards
+                for( int a = 0; a < 5; a++) {
+                    double actionProb = unintendedActionProb;
+                    boolean validAction = true;
+                    if (a == action){
+                        actionProb = intendedActionProb;
+                    }
+                    //Get the new cell for this action
+                    int newX = getNewX(a,x);
+                    int newY = getNewY(a,y);
+     
+                    if(squareValid(newX,newY) && mundo.grid[newX][newY] != 1){
+                        //Valid square, distribute prob
+                        newProbs[newX][newY] += (actionProb * thisProb);
+                    }
+                    else{
+                        //Invalid square, skip, add prob to STAY
+                        stayProb += actionProb;
+                    }
+                }
+                //Now process the STAY action
+                newProbs[x][y] += (stayProb * thisProb);
+            }
+        }
+        probs = newProbs; //update the predicted probabilities
+    }
+
+    void sensorUpdateAndNormalize(String sonars) {
+        double totalProb = 0.0; //For normalizing
+
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] != 0){
+                    continue; //Only process empty map squares
+                }
+
+                double sensorProb = 1.0;
+
+                for( int d = 0; d < 4; d++){
+                    int newX = getNewX(d,x);
+                    int newY = getNewY(d,y);
+
+                    char expected = '0';
+                    if( squareValid(newX, newY) && mundo.grid[newX][newY] == 1){
+                        expected = '1';
+                    }
+                    if( sonars.charAt(d) == expected){
+                        sensorProb *= sensorAccuracy;
+                    }
+                    else{
+                        sensorProb *= (1.0 - sensorAccuracy);
+                    }
+                }
+                probs[x][y] *= sensorProb;
+                totalProb += probs[x][y];
+            }
+        }
+
+        //Normalize so that we still have a probability
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] != 0){
+                    continue; //Only process empty map squares
+                }
+                probs[x][y] /= totalProb;
+            }
+        }
+    }
+
     // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     //       To do this, you should update the 2D-array "probs"
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
-    void updateProbabilities(int action, String sonars)
-    {
-        // your code
-        double[][] newProbabilities = new double[mundo.width][mundo.height];
-        double normFactor = 0.0;
-
-        //iterate over every spot
-        for (int x = 0; x < mundo.height; x++)
-        {
-            for (int y = 0; y < mundo.height; y++)
-            {
-                double probsSum = 0.0;
-                for (int z = 0; z < mundo.height; z++)
-                {
-                    for (int a = 0; a < mundo.width; a++)
-                    {
-                        probsSum += transitionModel(action, z, x, a, y) * probs[z][a];
-                    }
-                }
-                newProbabilities[x][y] = sensorModel(sonars, x, y) * probsSum;
-                normFactor += newProbabilities[x][y];
-
-            }
-
-        }
-
-        if (myMaps.gameStatus == 0) // If the game is still going on
-        {
-            for (int x = 0; x < mundo.height; x++)
-            {
-                for (int y = 0; y < mundo.width; y++)
-                {
-                    if (mundo.grid[y][x] == 3 || mundo.grid[y][x] == 2) // if the square is either a stairwell or goal
-                    {
-                        newProbabilities[y][x] = 0; //No probablity
-                    }
-                }
-            }
-
-            normFactor = 0.0; //recalculate
-            for (int x = 0; x < mundo.height; x++)
-            {
-                for (int y = 0; y < mundo.width; y++)
-                {
-                    normFactor += newProbabilities[y][x];
-                }
-            }
-        }
-
-        //NORMALIZEEEEEE
-        for (int x = 0; x < mundo.height; x++)
-        {
-            for (int y = 0; y < mundo.width; y++)
-            {
-                newProbabilities[x][y] /= normFactor;
-            }
-        }
-
-        probs = newProbabilities;
-
+    void updateProbabilities(int action, String sonars) {
+        // Do the motion model update
+        motionUpdate(action);
+        // Do the sensor model update and normalize
+        sensorUpdateAndNormalize(sonars);
+ 
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
     }
-
-    double transitionModel(int moveAction, int previousX, int currentX, int previousY, int currentY)
-    {
-        if (currentX < 0 || currentY < 0 || currentX >= mundo.width || currentY >= mundo.height || mundo.grid[currentX][currentY] == 1)
-        {
-            return 0; // There is no probability for it to be a nin existent square
-        }
-
-        double stayProbability = (1 - moveProb) / 4; //this is the probability the robot willnot move
-
-        switch(moveAction)
-        {
-            case NORTH:
-                if (currentY == previousY - 1 && currentX == previousX && previousY - 1 >= 0)
-                {
-                    return moveProb; //Great success
-                }
-                else if (currentX == previousX && currentY == previousY)
-                {
-                    return stayProbability; //IT DID NOT MOVE
-                }
-                break;
-            case SOUTH:
-                if (currentY == previousY + 1 && currentX == previousX && previousY + 1 < mundo.height)
-                {
-                    return moveProb; //Great success
-                }
-                else if (currentX == previousX && currentY == previousY)
-                {
-                    return stayProbability; //IT DID NOT MOVE
-                }
-                break;
-            case WEST:
-                if (currentX == previousX - 1 && currentY == previousY && previousX - 1 >= 0)
-                {
-                    return moveProb; //Great success
-                }
-                else if (currentX == previousX && currentY == previousY)
-                {
-                    return stayProbability; //IT DID NOT MOVE
-                }
-                break;
-            case EAST:
-                if (currentX == previousX + 1 && currentY == previousY && previousX + 1 < mundo.width)
-                {
-                    return moveProb; //Great success
-                }
-                else if (currentX == previousX && currentY == previousY)
-                {
-                    return stayProbability; //IT DID NOT MOVE
-                }
-                break;
-            case STAY:
-                if (currentY == previousY && currentX == previousX)
-                {
-                    return 1.0; // Stayed in the same place
-                }
-                break;
-        }
-
-
-
-        return 0.0;
-    }
-
-    double sensorModel(String sonars, int x, int y)
-    {
-        if (mundo.grid[x][y] == 1)
-        {
-            return 0; //CANT BE A WALL DANGIT
-        }
-
-        double errorRate = 1 - sensorAccuracy;
-        char[] sensorReadings = sonars.toCharArray();
-        double probability = 1.0;
-
-        //Check that the coordinates are valid (false by default)
-        boolean wallNorth = false;
-        boolean wallWest = false;
-        boolean wallSouth = false;
-        boolean wallEast = false;
-        if (y - 1 >= 0) 
-        {
-            wallNorth = mundo.grid[x][y - 1] == 1;
-        }
-
-        if (y + 1 < mundo.height) 
-        {
-            wallSouth = mundo.grid[x][y + 1] == 1;
-        }
-
-        if (x + 1 < mundo.width)
-         {
-            wallEast = mundo.grid[x + 1][y] == 1;
-        }
-
-        if (x - 1 >= 0) 
-        {
-            wallWest = mundo.grid[x - 1][y] == 1;
-        }
-
-        if (sensorReadings[0] == '1')
-         {
-            if (wallNorth) 
-            {
-                probability *= sensorAccuracy;
-            } 
-            else 
-            {
-                probability *= errorRate;
-            }
-        } 
-        else 
-        {
-            if (wallNorth) 
-            {
-                probability *= errorRate;
-            } 
-            else 
-            {
-                probability *= sensorAccuracy;
-            }
-        }
-        
-        if (sensorReadings[1] == '1') 
-        {
-            if (wallSouth) 
-            {
-                probability *= sensorAccuracy;
-            } 
-            else
-            {
-                probability *= errorRate;
-            }
-        } 
-        else 
-        {
-            if (wallSouth) 
-            {
-                probability *= errorRate;
-            } 
-            else 
-            {
-                probability *= sensorAccuracy;
-            }
-        }
-        
-        if (sensorReadings[2] == '1')
-        {
-            if (wallEast) 
-            {
-                probability *= sensorAccuracy;
-            }
-             else 
-            {
-                probability *= errorRate;
-            }
-        } 
-        else 
-        {
-            if (wallEast) 
-            {
-                probability *= errorRate;
-            } 
-            else
-            {
-                probability *= sensorAccuracy;
-            }
-        }
-        
-        if (sensorReadings[3] == '1') 
-        {
-            if (wallWest) 
-            {
-                probability *= sensorAccuracy;
-            } 
-            else 
-            {
-                probability *= errorRate;
-            }
-        } 
-        else 
-        {
-            if (wallWest) 
-            {
-                probability *= errorRate;
-            } 
-            else 
-            {
-                probability *= sensorAccuracy;
-            }
-        }
-
-        return probability;
-    }
-
-
     
-    // This is the function you'd need to write to make the robot move using your AI;
-    // You do NOT need to write this function for this lab; it can remain as is
+
+    // This is the function you'd need to write to make the robot move using your AI
+    // Approach 1: Maximum Expected Utility
     int automaticAction() {
+        int bestAction = mySmartMap.STAY;  // Default action
         
-        return STAY;  // default action for now
+        double maxExpectedUtility = Double.NEGATIVE_INFINITY;
+        
+        for (int action = 0; action < 5; action++) {
+            double expectedUtility = calculateExpectedUtility(action);
+            
+            if (expectedUtility > maxExpectedUtility) {
+                maxExpectedUtility = expectedUtility;
+                bestAction = action;
+            }
+        }
+
+        return bestAction;
+    }
+
+    // Calculate the expected utility for a given action
+    double calculateExpectedUtility(int action) {
+        double expectedUtility = 0.0;
+
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] == 0) {  // Only consider open spaces
+                    double stateProbability = probs[x][y];
+                    double actionUtility = calculateActionUtility(action, x, y);
+                    expectedUtility += stateProbability * actionUtility;
+                }
+            }
+        }
+
+        return expectedUtility;
+    }
+
+    // Calculate the utility for a given action in a specific state
+    double calculateActionUtility(int action, int x, int y) {
+        double actionUtility = 0.0;
+
+        for (int newX = 0; newX < mundo.width; newX++) {
+            for (int newY = 0; newY < mundo.height; newY++) {
+                if (mundo.grid[newX][newY] == 0) {  // Only consider open spaces
+                    double transitionProbability = calculateTransitionProbability(action, x, y, newX, newY);
+                    double nextStateUtility = Vs[newX][newY];
+                    actionUtility += transitionProbability * nextStateUtility;
+                }
+            }
+        }
+
+        return actionUtility;
+    }
+
+    // Calculate the probability of transitioning from one state to another given an action
+    double calculateTransitionProbability(int action, int x, int y, int newX, int newY) {
+        int intendedX = getNewX(action, x);
+        int intendedY = getNewY(action, y);
+
+        // Probability of intended action
+        double intendedActionProb = (action == mySmartMap.STAY) ? moveProb : 1.0 - (1.0 - moveProb) / 4.0;
+        double transitionProbability = (x == newX && y == newY) ? intendedActionProb : (1.0 - intendedActionProb) / 4.0;
+
+        return transitionProbability;
+    }
+
+        
+
+    void valueIteration() {
+        double epsilon = 0.01;  // Convergence threshold
+        double gamma = 0.9;     // Discount factor
+    
+        Vs = new double[mundo.width][mundo.height];
+    
+        // Initialize values for all states
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] == 0) {  // Open space
+                    Vs[x][y] = 0.0;
+                } else if (mundo.grid[x][y] == 2) {  // Stairwell (negative reward)
+                    Vs[x][y] = -1.0;
+                } else if (mundo.grid[x][y] == 3) {  // Goal (positive reward)
+                    Vs[x][y] = 1.0;
+                }
+            }
+        }
+    
+        // Perform value iteration until convergence
+        while (true) {
+            double maxChange = 0.0;
+    
+            // Update values for all states
+            for (int x = 0; x < mundo.width; x++) {
+                for (int y = 0; y < mundo.height; y++) {
+                    if (mundo.grid[x][y] == 0) {  // Only update values for open spaces
+                        double oldV = Vs[x][y];
+                        double maxQ = -Double.MAX_VALUE;
+    
+                        // Iterate over possible actions (NORTH, SOUTH, EAST, WEST, STAY)
+                        for (int action = 0; action < 5; action++) {
+                            int newX = getNewX(action, x);
+                            int newY = getNewY(action, y);
+    
+                            if (squareValid(newX, newY)) {
+                                double Q = Vs[newX][newY];
+                                maxQ = Math.max(maxQ, Q);
+                            }
+                        }
+    
+                        // Update value using the Bellman equation
+                        Vs[x][y] = maxQ;  // Use the max value instead of the reward from Mundo
+    
+                        // Check for convergence
+                        double change = Math.abs(Vs[x][y] - oldV);
+                        maxChange = Math.max(maxChange, change);
+                    }
+                }
+            }
+    
+            // Check for convergence
+            if (maxChange < epsilon) {
+                break;
+            }
+        }
+    
+        // Print or use Vs as needed
     }
     
+
     void doStuff() {
         int action;
         
-        //valueIteration();  // TODO: function you will write in Part II of the lab
+        System.out.println("Attempting value");
+        valueIteration();  // TODO: function you will write in Part II of the lab
         initializeProbabilities();  // Initializes the location (probability) map
         
         while (true) {
@@ -685,8 +676,11 @@ public class theRobot extends JFrame {
                 if (isManual)
                     action = getHumanAction();  // get the action selected by the user (from the keyboard)
                 else
+                    //action = maxAction(); // TODO: get the action selected by your AI;
+                    System.out.println("Attempting to choose action");
                     action = automaticAction(); // TODO: get the action selected by your AI;
                                                 // you'll need to write this function for part III
+                    System.out.println(action);
                 
                 sout.println(action); // send the action to the Server
                 
