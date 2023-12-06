@@ -331,7 +331,7 @@ public class theRobot extends JFrame {
                 knownPosition = true;
                 startX = Integer.parseInt(sin.readLine());
                 startY = Integer.parseInt(sin.readLine());
-                System.out.println("Robot's initial penis is known: " + startX + ", " + startY);
+                System.out.println("Robot's initial position is known: " + startX + ", " + startY);
             }
             else {
                 System.out.println("Robot's initial position is unknown");
@@ -540,71 +540,79 @@ public class theRobot extends JFrame {
     // Approach 1: Maximum Expected Utility
     int automaticAction() {
         int bestAction = mySmartMap.STAY;  // Default action
-        
         double maxExpectedUtility = Double.NEGATIVE_INFINITY;
-        
+    
         for (int action = 0; action < 5; action++) {
             double expectedUtility = calculateExpectedUtility(action);
-            
+            System.out.printf("Expected Utility for Action %d: %f%n", action, expectedUtility);
+    
             if (expectedUtility > maxExpectedUtility) {
                 maxExpectedUtility = expectedUtility;
                 bestAction = action;
             }
         }
-
+    
+        System.out.printf("Selected Action: %d%n", bestAction);
         return bestAction;
     }
-
-    // Calculate the expected utility for a given action
+    
     double calculateExpectedUtility(int action) {
         double expectedUtility = 0.0;
-
+    
         for (int x = 0; x < mundo.width; x++) {
             for (int y = 0; y < mundo.height; y++) {
-                if (mundo.grid[x][y] == 0) {  // Only consider open spaces
+                if (mundo.grid[x][y] == 0 || mundo.grid[x][y] == 3) {  // Only consider open spaces or the goal
                     double stateProbability = probs[x][y];
                     double actionUtility = calculateActionUtility(action, x, y);
                     expectedUtility += stateProbability * actionUtility;
+    
+                    System.out.printf("Action %d Utility at [%d][%d]: %f%n", action, x, y, actionUtility);
                 }
             }
         }
-
+    
         return expectedUtility;
     }
-
-    // Calculate the utility for a given action in a specific state
+    
     double calculateActionUtility(int action, int x, int y) {
         double actionUtility = 0.0;
-
+    
         for (int newX = 0; newX < mundo.width; newX++) {
             for (int newY = 0; newY < mundo.height; newY++) {
-                if (mundo.grid[newX][newY] == 0) {  // Only consider open spaces
+                if (mundo.grid[newX][newY] == 0)
+                {  // Only consider open spaces
                     double transitionProbability = calculateTransitionProbability(action, x, y, newX, newY);
                     double nextStateUtility = Vs[newX][newY];
                     actionUtility += transitionProbability * nextStateUtility;
+
+                
                 }
             }
         }
-
+    
         return actionUtility;
     }
-
-    // Calculate the probability of transitioning from one state to another given an action
+    
     double calculateTransitionProbability(int action, int x, int y, int newX, int newY) {
         int intendedX = getNewX(action, x);
         int intendedY = getNewY(action, y);
-
+    
         // Probability of intended action
         double intendedActionProb = (action == mySmartMap.STAY) ? moveProb : 1.0 - (1.0 - moveProb) / 4.0;
-        double transitionProbability = (x == newX && y == newY) ? intendedActionProb : (1.0 - intendedActionProb) / 4.0;
-
+        
+        // Check if the new position matches the intended position
+        boolean intendedPosition = (newX == intendedX) && (newY == intendedY);
+    
+        double transitionProbability = intendedPosition ? intendedActionProb : (1.0 - intendedActionProb) / 4.0;
+    
         return transitionProbability;
     }
+    
 
         
 
     void valueIteration() {
-        double epsilon = 0.01;  // Convergence threshold
+        double epsilon = 1.1;  // Convergence threshold
         double gamma = 0.9;     // Discount factor
     
         Vs = new double[mundo.width][mundo.height];
@@ -615,10 +623,13 @@ public class theRobot extends JFrame {
                 if (mundo.grid[x][y] == 0) {  // Open space
                     Vs[x][y] = 0.0;
                 } else if (mundo.grid[x][y] == 2) {  // Stairwell (negative reward)
-                    Vs[x][y] = -1.0;
+                    Vs[x][y] = -10.0;
                 } else if (mundo.grid[x][y] == 3) {  // Goal (positive reward)
-                    Vs[x][y] = 1.0;
+                    Vs[x][y] = 10.0;
                 }
+
+                System.out.printf("Vs [%d][%d] is %f%n", x, y, Vs[x][y]);
+
             }
         }
     
@@ -632,6 +643,8 @@ public class theRobot extends JFrame {
                     if (mundo.grid[x][y] == 0) {  // Only update values for open spaces
                         double oldV = Vs[x][y];
                         double maxQ = -Double.MAX_VALUE;
+
+                        
     
                         // Iterate over possible actions (NORTH, SOUTH, EAST, WEST, STAY)
                         for (int action = 0; action < 5; action++) {
@@ -645,7 +658,7 @@ public class theRobot extends JFrame {
                         }
     
                         // Update value using the Bellman equation
-                        Vs[x][y] = maxQ;  // Use the max value instead of the reward from Mundo
+                        Vs[x][y] = maxQ * gamma;   // Use the max value instead of the reward from Mundo
     
                         // Check for convergence
                         double change = Math.abs(Vs[x][y] - oldV);
